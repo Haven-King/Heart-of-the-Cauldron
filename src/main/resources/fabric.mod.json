@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "heartofthecauldron",
+  "version": "${version}",
+
+  "name": "Heart of the Cauldron",
+  "description": "Allows you to right click a Cauldron with a Heart of the Sea for infinite water!",
+  "authors": [
+    "Haven King"
+  ],
+  "contact": {
+    "homepage": "https://skylight.dev/"
+  },
+
+  "license": "CC0-1.0",
+  "icon": "assets/heartofthecauldron/icon.png",
+
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "dev.hephaestus.heartofthecauldron.Server"
+    ],
+    "client": [
+      "dev.hephaestus.heartofthecauldron.Client"
+    ]
+  },
+  "mixins": [
+    "heartofthecauldron.mixins.json"
+  ],
+
+  "depends": {
+    "fabricloader": ">=0.4.0",
+    "fabric": "*"
+  },
+  "suggests": {
+    "flamingo": "*"
+  }
+}
