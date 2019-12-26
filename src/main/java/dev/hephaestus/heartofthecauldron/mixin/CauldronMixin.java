@@ -25,8 +25,8 @@ import java.util.Random;
 
 @Mixin(CauldronBlock.class)
 public class CauldronMixin {
-	@Inject(at = @At("HEAD"), method = "activate")
-	private void activateHead(BlockState blockState_1, World world_1, BlockPos blockPos_1, PlayerEntity playerEntity_1, Hand hand_1, BlockHitResult blockHitResult_1, CallbackInfoReturnable info) {
+	@Inject(at = @At("HEAD"), method = "onUse")
+	private void activateHead(BlockState blockState_1, World world_1, BlockPos blockPos_1, PlayerEntity playerEntity_1, Hand hand_1, BlockHitResult blockHitResult_1, CallbackInfoReturnable info){
 		ItemStack itemStack_1 = playerEntity_1.getStackInHand(hand_1);
 		if (itemStack_1.getItem() == Items.HEART_OF_THE_SEA) {
 			if (!world_1.isClient) {

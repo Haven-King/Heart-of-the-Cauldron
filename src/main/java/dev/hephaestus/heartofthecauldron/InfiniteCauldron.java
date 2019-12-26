@@ -18,9 +18,10 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.stat.Stats;
-import net.minecraft.state.StateFactory;
+import net.minecraft.state.StateManager;
 import net.minecraft.state.property.IntProperty;
 import net.minecraft.state.property.Properties;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.BooleanBiFunction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -30,41 +31,42 @@ import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 
-public class InfiniteCauldron extends Block {
+public class InfiniteCauldron extends CauldronBlock {
     public static final IntProperty LEVEL;
     private static final VoxelShape RAY_TRACE_SHAPE;
     protected static final VoxelShape OUTLINE_SHAPE;
 
     public InfiniteCauldron(Block.Settings block$Settings_1) {
         super(block$Settings_1);
-        this.setDefaultState((BlockState)((BlockState)this.stateFactory.getDefaultState()).with(LEVEL, 3));
+        this.setDefaultState((BlockState)((BlockState)this.stateManager.getDefaultState()).with(LEVEL, 3));
     }
 
     public VoxelShape getOutlineShape(BlockState blockState_1, BlockView blockView_1, BlockPos blockPos_1, EntityContext entityContext_1) {
         return OUTLINE_SHAPE;
     }
 
-    public boolean isOpaque(BlockState blockState_1) {
-        return false;
-    }
+//    public boolean isOpaque(BlockState blockState_1) {
+//        return false;
+//    }
 
     public VoxelShape getRayTraceShape(BlockState blockState_1, BlockView blockView_1, BlockPos blockPos_1) {
         return RAY_TRACE_SHAPE;
     }
 
-    public void onEntityCollision(BlockState blockState_1, World world_1, BlockPos blockPos_1, Entity entity_1) {
-        int int_1 = (Integer)blockState_1.get(LEVEL);
-        float float_1 = (float)blockPos_1.getY() + (6.0F + (float)(3 * int_1)) / 16.0F;
-        if (!world_1.isClient && entity_1.isOnFire() && int_1 > 0 && entity_1.getBoundingBox().minY <= (double)float_1) {
-            entity_1.extinguish();
+    public void onEntityCollision(BlockState state, World world, BlockPos pos, Entity entity) {
+        int i = (Integer)state.get(LEVEL);
+        float f = (float)pos.getY() + (6.0F + (float)(3 * i)) / 16.0F;
+        if (!world.isClient && entity.isOnFire() && i > 0 && entity.getY() <= (double)f) {
+            entity.extinguish();
+            this.setLevel(world, pos, state, i - 1);
         }
 
     }
 
-    public boolean activate(BlockState blockState_1, World world_1, BlockPos blockPos_1, PlayerEntity playerEntity_1, Hand hand_1, BlockHitResult blockHitResult_1) {
+    public ActionResult onUse(BlockState blockState_1, World world_1, BlockPos blockPos_1, PlayerEntity playerEntity_1, Hand hand_1, BlockHitResult blockHitResult_1) {
         ItemStack itemStack_1 = playerEntity_1.getStackInHand(hand_1);
         if (itemStack_1.isEmpty()) {
-            return true;
+            return ActionResult.PASS;
         } else {
             int int_1 = (Integer)blockState_1.get(LEVEL);
             Item item_1 = itemStack_1.getItem();
@@ -83,7 +85,7 @@ public class InfiniteCauldron extends Block {
                     world_1.playSound((PlayerEntity)null, blockPos_1, SoundEvents.ITEM_BUCKET_FILL, SoundCategory.BLOCKS, 1.0F, 1.0F);
                 }
 
-                return true;
+                return ActionResult.PASS;
             } else {
                 ItemStack itemStack_4;
                 if (item_1 == Items.GLASS_BOTTLE) {
@@ -104,14 +106,14 @@ public class InfiniteCauldron extends Block {
                         world_1.playSound((PlayerEntity)null, blockPos_1, SoundEvents.ITEM_BOTTLE_FILL, SoundCategory.BLOCKS, 1.0F, 1.0F);
                     }
 
-                    return true;
+                    return ActionResult.PASS;
                 } else {
                     if (int_1 > 0 && item_1 instanceof DyeableItem) {
                         DyeableItem dyeableItem_1 = (DyeableItem)item_1;
                         if (dyeableItem_1.hasColor(itemStack_1) && !world_1.isClient) {
                             dyeableItem_1.removeColor(itemStack_1);
                             playerEntity_1.incrementStat(Stats.CLEAN_ARMOR);
-                            return true;
+                            return ActionResult.PASS;
                         }
                     }
 
@@ -134,22 +136,22 @@ public class InfiniteCauldron extends Block {
                             }
                         }
 
-                        return true;
+                        return ActionResult.PASS;
                     } else if (int_1 > 0 && item_1 instanceof BlockItem) {
                         Block block_1 = ((BlockItem)item_1).getBlock();
                         if (block_1 instanceof ShulkerBoxBlock && !world_1.isClient()) {
                             ItemStack itemStack_5 = new ItemStack(Blocks.SHULKER_BOX, 1);
                             if (itemStack_1.hasTag()) {
-                                itemStack_5.setTag(itemStack_1.getTag().method_10553());
+                                itemStack_5.setTag(itemStack_1.getTag().copy());
                             }
 
                             playerEntity_1.setStackInHand(hand_1, itemStack_5);
                             playerEntity_1.incrementStat(Stats.CLEAN_SHULKER_BOX);
                         }
 
-                        return true;
+                        return ActionResult.PASS;
                     } else {
-                        return false;
+                        return ActionResult.CONSUME;
                     }
                 }
             }
@@ -164,7 +166,6 @@ public class InfiniteCauldron extends Block {
                 if ((Integer)blockState_1.get(LEVEL) < 3) {
                     world_1.setBlockState(blockPos_1, (BlockState)blockState_1.cycle(LEVEL), 2);
                 }
-
             }
         }
     }
@@ -177,7 +178,7 @@ public class InfiniteCauldron extends Block {
         return (Integer)blockState_1.get(LEVEL);
     }
 
-    protected void appendProperties(StateFactory.Builder<Block, BlockState> stateFactory$Builder_1) {
+    protected void appendProperties(StateManager.Builder<Block, BlockState> stateFactory$Builder_1) {
         stateFactory$Builder_1.add(LEVEL);
     }
 
